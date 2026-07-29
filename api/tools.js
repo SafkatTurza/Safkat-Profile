@@ -11,6 +11,7 @@ function sanitizeTool(t) {
     description: String(t.description || '').trim().slice(0, 220),
     url: String(t.url || '').trim().slice(0, 300),
     tag: String(t.tag || '').trim().slice(0, 40),
+    logo: String(t.logo || '').trim().slice(0, 300),
   };
 }
 
