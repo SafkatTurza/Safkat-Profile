@@ -26,6 +26,7 @@
   --shadow: 0 1px 2px oklch(0.3 0.02 265 / 0.04), 0 12px 32px oklch(0.3 0.02 265 / 0.06);
   --shadow-lg: 0 2px 4px oklch(0.3 0.02 265 / 0.05), 0 24px 60px oklch(0.3 0.02 265 / 0.12);
   --maxw: 1180px;
+  --gutter: clamp(20px, 4vw, 32px);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 [data-theme="dark"]{
@@ -51,15 +52,21 @@ body{
   background:var(--bg);
   color:var(--text);
   font-family:'Manrope',system-ui,sans-serif;
-  font-size:17px;
+  font-size:clamp(16px, 0.28vw + 15.1px, 17px);
   line-height:1.6;
   -webkit-font-smoothing:antialiased;
   transition:background .5s var(--ease), color .5s var(--ease);
   overflow-x:hidden;
 }
 h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.05;letter-spacing:-0.02em}
+/* long unbroken strings (emails, urls) must never force a horizontal scroll */
+p,h1,h2,h3,h4,li,a,span{overflow-wrap:break-word}
 a{color:inherit;text-decoration:none}
-.wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px}
+/* visible keyboard focus everywhere, using the existing accent colour */
+:where(a,button,input,textarea,select,[tabindex]):focus-visible{
+  outline:2px solid var(--accent);outline-offset:3px;border-radius:8px;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
 .mono{font-family:'Space Grotesk',sans-serif;font-feature-settings:"tnum";letter-spacing:0.02em}
 .eyebrow{
   font-family:'Space Grotesk',sans-serif;
@@ -81,23 +88,25 @@ header.nav.scrolled{
   backdrop-filter:blur(14px) saturate(1.4);
   border-bottom:1px solid var(--line);
 }
-.nav-inner{display:flex;align-items:center;justify-content:space-between;height:74px;max-width:var(--maxw);margin:0 auto;padding:0 32px}
-.brand{font-family:'Space Grotesk';font-weight:600;font-size:18px;letter-spacing:-0.01em;display:flex;align-items:center;gap:10px}
-.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
-.nav-links{display:flex;align-items:center;gap:8px}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;height:74px;max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+.brand{font-family:'Space Grotesk';font-weight:600;font-size:18px;letter-spacing:-0.01em;display:flex;align-items:center;gap:10px;min-height:44px;flex:none;white-space:nowrap}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);flex:none}
+.nav-links{display:flex;align-items:center;gap:8px;min-width:0}
 .nav-links a{
   font-size:14.5px;font-weight:500;color:var(--text-2);
   padding:9px 14px;border-radius:9px;transition:color .2s,background .2s;
+  white-space:nowrap;display:inline-flex;align-items:center;min-height:44px;
 }
 .nav-links a:hover{color:var(--text);background:var(--surface-2)}
 .nav-cta{
   font-family:'Space Grotesk';font-size:14px;font-weight:500;
   padding:9px 18px;border-radius:10px;border:1px solid var(--line-2);color:var(--text);
   transition:border-color .2s,background .2s,transform .2s;
+  display:inline-flex;align-items:center;min-height:44px;white-space:nowrap;flex:none;
 }
 .nav-cta:hover{background:var(--text);color:var(--bg);border-color:var(--text);transform:translateY(-1px)}
 .icon-btn{
-  width:42px;height:42px;display:grid;place-items:center;border-radius:11px;
+  width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:11px;
   border:1px solid var(--line);background:var(--surface);color:var(--text);cursor:pointer;
   transition:border-color .2s,transform .2s,background .2s;
 }
@@ -106,11 +115,22 @@ header.nav.scrolled{
 .theme-toggle .moon{display:none}
 [data-theme="dark"] .theme-toggle .sun{display:none}
 [data-theme="dark"] .theme-toggle .moon{display:block}
-.nav-tools{display:flex;align-items:center;gap:12px}
+.nav-tools{display:flex;align-items:center;gap:12px;flex:none}
 .burger{display:none}
+/* full nav needs ~760px of its own; below that switch to the drawer so links
+   never crowd or wrap against the brand and CTA */
+@media(max-width:819px){
+  .nav-links{display:none}
+  .burger{display:grid}
+}
+/* on the narrowest phones the brand + 3 controls no longer fit; the drawer
+   already carries a Contact link, so drop the duplicate CTA rather than crowd */
+@media(max-width:419px){
+  .nav-cta{display:none}
+}
 
 /* ---------- HERO ---------- */
-.hero{padding:150px 0 90px;position:relative}
+.hero{padding:clamp(120px,13vh,150px) 0 clamp(70px,9vh,90px);position:relative}
 .hero-grid{display:grid;grid-template-columns:1.15fr 0.85fr;gap:64px;align-items:center}
 .status{
   display:inline-flex;align-items:center;gap:9px;
@@ -183,7 +203,7 @@ header.nav.scrolled{
 .portrait-badge .lbl{font-size:12.5px;color:var(--text-2);line-height:1.3;font-weight:600}
 
 /* ---------- SECTIONS ---------- */
-section{padding:96px 0;position:relative}
+section{padding:clamp(72px,8.5vw,96px) 0;position:relative}
 .sec-head{margin-bottom:54px;max-width:640px}
 .sec-head h2{font-size:clamp(32px,4.4vw,52px);font-weight:700;margin-top:18px;letter-spacing:-0.03em}
 .sec-head p{color:var(--text-2);margin-top:16px;font-size:18px}
@@ -193,7 +213,8 @@ section{padding:96px 0;position:relative}
 .about-grid .lead{font-size:clamp(21px,2.5vw,27px);font-family:'Space Grotesk';font-weight:400;line-height:1.42;letter-spacing:-0.01em;color:var(--text)}
 .about-grid .lead b{color:var(--accent);font-weight:500}
 .about-body p{color:var(--text-2);margin-bottom:18px}
-.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:38px}
+/* auto-fit steps 3 -> 2 -> 1 across on its own, no hard breakpoint needed */
+.stat-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:18px;margin-top:38px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 20px;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s}
 .stat:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--line-2)}
 .stat .n{font-family:'Space Grotesk';font-size:34px;font-weight:700;letter-spacing:-0.02em;background:linear-gradient(120deg,var(--accent),var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -220,7 +241,7 @@ section{padding:96px 0;position:relative}
 
 /* skills */
 .skills-section{background:var(--bg-2)}
-.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:16px}
 .skill{
   display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);
   border-radius:14px;padding:20px 22px;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;
@@ -230,7 +251,7 @@ section{padding:96px 0;position:relative}
 .skill .name{font-weight:600;font-size:16.5px}
 
 /* ai tools */
-.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:20px}
 .tool-card{
   position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;
   padding:26px 24px;display:flex;flex-direction:column;gap:14px;overflow:hidden;
@@ -243,7 +264,7 @@ section{padding:96px 0;position:relative}
 .tool-card h3{font-size:19px;font-weight:600}
 .tool-card p{color:var(--text-2);font-size:15px;line-height:1.55;flex:1}
 .tool-tag{align-self:flex-start;font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 11px;border-radius:8px}
-.tool-link{display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk';font-size:14.5px;font-weight:600;color:var(--accent)}
+.tool-link{display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk';font-size:14.5px;font-weight:600;color:var(--accent);min-height:44px;align-self:flex-start}
 .tool-link svg{width:15px;height:15px;transition:transform .2s var(--ease)}
 .tool-card:hover .tool-link svg{transform:translate(2px,-2px)}
 .tools-empty{color:var(--text-3);font-size:15.5px}
@@ -322,7 +343,7 @@ section{padding:96px 0;position:relative}
 .contact-section{padding-bottom:60px}
 .contact-card{
   position:relative;background:linear-gradient(135deg,var(--accent),oklch(0.46 0.18 290));
-  border-radius:26px;padding:72px 60px;overflow:hidden;color:#fff;
+  border-radius:26px;padding:clamp(44px,6vw,72px) clamp(24px,5vw,60px);overflow:hidden;color:#fff;
 }
 .contact-card::after{content:"";position:absolute;right:-80px;top:-80px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,oklch(0.7 0.13 195 / .55),transparent 70%)}
 .contact-card .inner{position:relative;z-index:1;max-width:680px}
@@ -341,11 +362,11 @@ section{padding:96px 0;position:relative}
 
 /* footer */
 footer{border-top:1px solid var(--line);padding:40px 0}
-.foot-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.foot-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px}
 .foot-inner .l{font-family:'Space Grotesk';font-weight:600;font-size:15px}
 .foot-inner .r{color:var(--text-3);font-size:14px}
-.foot-links{display:flex;gap:20px}
-.foot-links a{color:var(--text-2);font-size:14px;font-weight:500;transition:color .2s}
+.foot-links{display:flex;gap:20px;flex-wrap:wrap}
+.foot-links a{color:var(--text-2);font-size:14px;font-weight:500;transition:color .2s;display:inline-flex;align-items:center;min-height:44px}
 .foot-links a:hover{color:var(--accent)}
 
 /* reveal */
@@ -359,28 +380,37 @@ footer{border-top:1px solid var(--line);padding:40px 0}
   .anim .hero h1 .line span,.anim .hero .role,.anim .hero .summary,.anim .hero-actions,.anim .meta-row,.anim .portrait-wrap,.anim .reveal{opacity:1!important;transform:none!important;animation:none!important}
 }
 
+/* narrow the fixed meta column before the layout has to stack entirely */
+@media(max-width:1100px){
+  .xp{grid-template-columns:200px 1fr;gap:28px}
+}
 @media(max-width:920px){
   .hero-grid{grid-template-columns:1fr;gap:48px}
-  .portrait-wrap{max-width:380px}
+  .portrait-wrap{max-width:min(380px,100%)}
   .about-grid{grid-template-columns:1fr;gap:34px}
   .xp{grid-template-columns:1fr;gap:14px;padding:30px 18px}
 }
 @media(max-width:680px){
-  .wrap,.nav-inner{padding-left:20px;padding-right:20px}
-  body{font-size:16px}
-  .nav-links{display:none}
-  .burger{display:grid}
-  .hero{padding:120px 0 70px}
-  section{padding:72px 0}
-  .stat-strip{grid-template-columns:1fr}
-  .contact-card{padding:48px 28px}
   .meta-row{gap:22px}
   .portrait-badge{left:-8px}
+  /* pull the decorative gradient in so it can't bleed past the viewport */
+  .portrait-wrap::before{inset:16px -8px -16px 16px}
 }
 /* mobile menu */
-.m-menu{position:fixed;inset:0;z-index:99;background:var(--bg);transform:translateX(100%);transition:transform .45s var(--ease);display:flex;flex-direction:column;padding:100px 32px 40px}
+.m-menu{
+  position:fixed;inset:0;z-index:99;background:var(--bg);
+  transform:translateX(100%);transition:transform .45s var(--ease);
+  display:flex;flex-direction:column;
+  padding:clamp(88px,12vh,100px) var(--gutter) 40px;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+}
 .m-menu.open{transform:translateX(0)}
-.m-menu a{font-family:'Space Grotesk';font-size:30px;font-weight:600;padding:16px 0;border-bottom:1px solid var(--line);color:var(--text)}
+.m-menu a{font-family:'Space Grotesk';font-size:clamp(22px,6vw,30px);font-weight:600;padding:16px 0;border-bottom:1px solid var(--line);color:var(--text)}
+/* short/landscape screens: tighten so every link stays reachable */
+@media(max-height:520px){
+  .m-menu{padding-top:84px}
+  .m-menu a{font-size:20px;padding:11px 0}
+}
 </style>
 <script>
   (function(){
@@ -408,7 +438,7 @@ footer{border-top:1px solid var(--line);padding:40px 0}
         <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
       <a href="#contact" class="nav-cta">Get in touch</a>
-      <button class="icon-btn burger" id="burger" aria-label="Menu">
+      <button class="icon-btn burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="mMenu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
     </div>
@@ -669,8 +699,20 @@ const onScroll=()=>{nav.classList.toggle('scrolled',window.scrollY>20)};
 onScroll();window.addEventListener('scroll',onScroll,{passive:true});
 // burger
 const burger=document.getElementById('burger'),mMenu=document.getElementById('mMenu');
-burger.addEventListener('click',()=>mMenu.classList.toggle('open'));
-mMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mMenu.classList.remove('open')));
+function setMenu(open){
+  mMenu.classList.toggle('open',open);
+  burger.setAttribute('aria-expanded',String(open));
+  // stop the page behind the drawer from scrolling while it's open
+  document.body.style.overflow=open?'hidden':'';
+}
+burger.addEventListener('click',()=>setMenu(!mMenu.classList.contains('open')));
+mMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMenu(false)));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&mMenu.classList.contains('open')){setMenu(false);burger.focus();}
+});
+// if the viewport grows past the drawer breakpoint, don't leave it stuck open
+const mq=window.matchMedia('(min-width:820px)');
+mq.addEventListener('change',e=>{if(e.matches)setMenu(false);});
 // reveal
 const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:0.14,rootMargin:'0px 0px -8% 0px'});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
