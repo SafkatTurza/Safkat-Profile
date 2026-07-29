@@ -1,0 +1,12 @@
+{
+  "name": "safkat-profile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Safkat Turza — Project Co-Ordinator portfolio",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.0"
+  }
+}

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Admin — Safkat Turza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg: oklch(0.985 0.003 250);
+  --bg-2: oklch(0.965 0.005 250);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.975 0.004 250);
+  --text: oklch(0.24 0.02 265);
+  --text-2: oklch(0.46 0.02 265);
+  --text-3: oklch(0.62 0.015 265);
+  --line: oklch(0.90 0.008 265);
+  --line-2: oklch(0.84 0.01 265);
+  --accent: oklch(0.52 0.20 277);
+  --accent-soft: oklch(0.52 0.20 277 / 0.10);
+  --teal: oklch(0.62 0.11 195);
+  --danger: oklch(0.56 0.20 25);
+  --danger-soft: oklch(0.56 0.20 25 / 0.10);
+  --shadow: 0 1px 2px oklch(0.3 0.02 265 / 0.04), 0 12px 32px oklch(0.3 0.02 265 / 0.06);
+  --maxw: 760px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-theme="dark"]{
+  --bg: oklch(0.17 0.012 265);
+  --bg-2: oklch(0.20 0.014 265);
+  --surface: oklch(0.215 0.015 265);
+  --surface-2: oklch(0.245 0.016 265);
+  --text: oklch(0.96 0.006 250);
+  --text-2: oklch(0.75 0.012 260);
+  --text-3: oklch(0.60 0.014 260);
+  --line: oklch(0.30 0.014 265);
+  --line-2: oklch(0.38 0.016 265);
+  --accent: oklch(0.72 0.15 277);
+  --accent-soft: oklch(0.72 0.15 277 / 0.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);font-family:'Manrope',system-ui,sans-serif;
+  font-size:16px;line-height:1.55;min-height:100vh;
+}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.02em}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:56px 24px 100px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px}
+.brand{font-family:'Space Grotesk';font-weight:600;font-size:17px;display:flex;align-items:center;gap:9px}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.logout{font-size:13.5px;font-weight:600;color:var(--text-2);border:1px solid var(--line-2);padding:8px 14px;border-radius:9px;cursor:pointer;background:var(--surface)}
+.logout:hover{color:var(--text)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:var(--shadow)}
+.card h2{font-size:20px;margin-bottom:6px}
+.card .hint{color:var(--text-3);font-size:13.5px;margin-bottom:20px}
+label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;margin-top:16px}
+label:first-of-type{margin-top:0}
+input[type=text],input[type=password],input[type=url],textarea{
+  width:100%;font:inherit;font-size:15px;padding:11px 13px;border-radius:10px;
+  border:1px solid var(--line-2);background:var(--bg);color:var(--text);
+}
+textarea{resize:vertical;min-height:70px}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.switch-row{display:flex;align-items:center;gap:12px;margin-top:4px}
+.switch{position:relative;width:48px;height:28px;flex:none}
+.switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.switch .track{position:absolute;inset:0;background:var(--line-2);border-radius:100px;transition:background .2s;pointer-events:none}
+.switch .thumb{position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s;pointer-events:none}
+.switch input:checked + .track{background:var(--accent)}
+.switch input:checked ~ .thumb{transform:translateX(20px)}
+.switch-lbl{font-size:15px;font-weight:600}
+.btn{
+  font-family:'Space Grotesk';font-weight:500;font-size:14.5px;cursor:pointer;
+  padding:11px 20px;border-radius:10px;border:1px solid transparent;
+  display:inline-flex;align-items:center;gap:8px;transition:transform .15s,background .2s;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-ghost{background:transparent;border-color:var(--line-2);color:var(--text)}
+.btn-ghost:hover{background:var(--surface-2)}
+.btn-danger{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.actions-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.status-msg{font-size:13.5px;font-weight:600;margin-top:14px}
+.status-msg.ok{color:oklch(0.55 0.15 150)}
+.status-msg.err{color:var(--danger)}
+.tool-item{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:var(--surface-2)}
+.tool-item .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tool-item .row2{margin-top:12px}
+.tool-item .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tool-item .idx{font-family:'Space Grotesk';font-size:12.5px;font-weight:600;color:var(--text-3)}
+.remove-btn{font-size:12.5px;font-weight:600;color:var(--danger);background:none;border:none;cursor:pointer;padding:4px 8px}
+.remove-btn:hover{text-decoration:underline}
+.empty-note{color:var(--text-3);font-size:14px;padding:8px 0}
+
+/* login gate */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:36px;box-shadow:var(--shadow)}
+.gate-card h1{font-size:22px;margin-bottom:6px}
+.gate-card p{color:var(--text-2);font-size:14px;margin-bottom:22px}
+.gate-card .btn{width:100%;justify-content:center;margin-top:16px}
+.gate-err{color:var(--danger);font-size:13.5px;margin-top:10px;min-height:18px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h1>Admin access</h1>
+    <p>Enter your admin password to manage availability status and AI tools.</p>
+    <label for="pw">Password</label>
+    <input type="password" id="pw" autocomplete="current-password" />
+    <button class="btn btn-primary" id="loginBtn" type="button">Sign in</button>
+    <div class="gate-err" id="gateErr"></div>
+  </div>
+</div>
+
+<div class="wrap" id="panel" hidden>
+  <div class="top">
+    <span class="brand"><span class="dot"></span>Safkat Turza — Admin</span>
+    <button class="logout" id="logoutBtn" type="button">Sign out</button>
+  </div>
+
+  <div class="card">
+    <h2>Availability status</h2>
+    <p class="hint">Controls the pill shown at the top of your homepage.</p>
+    <div class="switch-row">
+      <label class="switch">
+        <input type="checkbox" id="availToggle" />
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+      <span class="switch-lbl" id="availLbl">Open to work</span>
+    </div>
+    <label for="statusText">Status text</label>
+    <input type="text" id="statusText" maxlength="160" placeholder="e.g. Open to remote project coordination & operations roles" />
+    <div class="actions-row">
+      <button class="btn btn-primary" id="saveStatus" type="button">Save status</button>
+    </div>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>AI tools</h2>
+    <p class="hint">Shown as cards in the "AI Tools" section on your homepage.</p>
+    <div id="toolsList"></div>
+    <p class="empty-note" id="toolsEmptyNote" hidden>No tools yet — add one below.</p>
+
+    <div class="tool-item" style="background:var(--surface);border-style:dashed">
+      <div class="top-row"><span class="idx">New tool</span></div>
+      <div class="row">
+        <div><label for="newName">Name</label><input type="text" id="newName" maxlength="80" /></div>
+        <div><label for="newTag">Tag (optional)</label><input type="text" id="newTag" maxlength="40" placeholder="e.g. Productivity" /></div>
+      </div>
+      <label for="newDesc">Description</label>
+      <textarea id="newDesc" maxlength="220"></textarea>
+      <label for="newUrl">Free link (URL)</label>
+      <input type="url" id="newUrl" placeholder="https://" />
+      <div class="actions-row"><button class="btn btn-ghost" id="addToolBtn" type="button">+ Add tool</button></div>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn btn-primary" id="saveTools" type="button">Save all tools</button>
+    </div>
+    <div class="status-msg" id="toolsMsg"></div>
+  </div>
+</div>
+
+<script>
+const gate=document.getElementById('gate');
+const panel=document.getElementById('panel');
+const pwInput=document.getElementById('pw');
+const gateErr=document.getElementById('gateErr');
+
+function adminKey(){ return sessionStorage.getItem('st-admin-key') || ''; }
+
+async function apiGet(path){
+  const res=await fetch(path,{cache:'no-store'});
+  if(!res.ok) throw new Error('Request failed: '+res.status);
+  return res.json();
+}
+async function apiPost(path,body){
+  const res=await fetch(path,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-admin-key':adminKey()},
+    body:JSON.stringify(body)
+  });
+  if(!res.ok){
+    if(res.status===401){ signOut(); throw new Error('Session expired — please sign in again.'); }
+    const data=await res.json().catch(()=>({}));
+    throw new Error(data.error||'Request failed: '+res.status);
+  }
+  return res.json();
+}
+
+async function tryLogin(){
+  gateErr.textContent='';
+  const password=pwInput.value;
+  if(!password) return;
+  document.getElementById('loginBtn').disabled=true;
+  try{
+    const res=await fetch('/api/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password})
+    });
+    const data=await res.json();
+    if(res.ok && data.ok){
+      sessionStorage.setItem('st-admin-key',password);
+      enterPanel();
+    }else{
+      gateErr.textContent='Incorrect password.';
+    }
+  }catch(e){
+    gateErr.textContent='Could not reach the server. Try again.';
+  }finally{
+    document.getElementById('loginBtn').disabled=false;
+  }
+}
+document.getElementById('loginBtn').addEventListener('click',tryLogin);
+pwInput.addEventListener('keydown',e=>{ if(e.key==='Enter') tryLogin(); });
+
+function signOut(){
+  sessionStorage.removeItem('st-admin-key');
+  panel.hidden=true;
+  gate.hidden=false;
+  pwInput.value='';
+  pwInput.focus();
+}
+document.getElementById('logoutBtn').addEventListener('click',signOut);
+
+function enterPanel(){
+  gate.hidden=true;
+  panel.hidden=false;
+  loadStatus();
+  loadTools();
+}
+
+// ---------- status ----------
+const availToggle=document.getElementById('availToggle');
+const availLbl=document.getElementById('availLbl');
+const statusText=document.getElementById('statusText');
+const statusMsg=document.getElementById('statusMsg');
+
+availToggle.addEventListener('change',()=>{
+  availLbl.textContent=availToggle.checked?'Open to work':'Not currently available';
+});
+
+async function loadStatus(){
+  try{
+    const data=await apiGet('/api/status');
+    availToggle.checked=data.available!==false;
+    availLbl.textContent=availToggle.checked?'Open to work':'Not currently available';
+    statusText.value=data.text||'';
+  }catch(e){
+    statusMsg.textContent='Could not load current status.';
+    statusMsg.className='status-msg err';
+  }
+}
+
+document.getElementById('saveStatus').addEventListener('click',async()=>{
+  statusMsg.textContent='';
+  const text=statusText.value.trim();
+  if(!text){ statusMsg.textContent='Status text is required.'; statusMsg.className='status-msg err'; return; }
+  try{
+    await apiPost('/api/status',{available:availToggle.checked,text});
+    statusMsg.textContent='Saved — live on your homepage now.';
+    statusMsg.className='status-msg ok';
+  }catch(e){
+    statusMsg.textContent=e.message;
+    statusMsg.className='status-msg err';
+  }
+});
+
+// ---------- tools ----------
+let tools=[];
+const toolsList=document.getElementById('toolsList');
+const toolsEmptyNote=document.getElementById('toolsEmptyNote');
+const toolsMsg=document.getElementById('toolsMsg');
+
+function renderTools(){
+  toolsList.innerHTML='';
+  toolsEmptyNote.hidden=tools.length>0;
+  tools.forEach((t,i)=>{
+    const el=document.createElement('div');
+    el.className='tool-item';
+    el.innerHTML=`
+      <div class="top-row"><span class="idx">Tool ${i+1}</span><button class="remove-btn" type="button" data-i="${i}">Remove</button></div>
+      <div class="row">
+        <div><label>Name</label><input type="text" maxlength="80" data-field="name" data-i="${i}" value="${escapeAttr(t.name)}" /></div>
+        <div><label>Tag (optional)</label><input type="text" maxlength="40" data-field="tag" data-i="${i}" value="${escapeAttr(t.tag||'')}" /></div>
+      </div>
+      <label>Description</label>
+      <textarea maxlength="220" data-field="description" data-i="${i}">${escapeHtml(t.description||'')}</textarea>
+      <label>Free link (URL)</label>
+      <input type="url" data-field="url" data-i="${i}" value="${escapeAttr(t.url)}" />
+    `;
+    toolsList.appendChild(el);
+  });
+  toolsList.querySelectorAll('[data-field]').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const i=+inp.dataset.i, field=inp.dataset.field;
+      tools[i][field]=inp.value;
+    });
+  });
+  toolsList.querySelectorAll('.remove-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      tools.splice(+btn.dataset.i,1);
+      renderTools();
+    });
+  });
+}
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeAttr(s){return escapeHtml(s);}
+
+async function loadTools(){
+  try{
+    tools=await apiGet('/api/tools');
+    if(!Array.isArray(tools)) tools=[];
+    renderTools();
+  }catch(e){
+    toolsMsg.textContent='Could not load current tools.';
+    toolsMsg.className='status-msg err';
+  }
+}
+
+document.getElementById('addToolBtn').addEventListener('click',()=>{
+  const name=document.getElementById('newName').value.trim();
+  const desc=document.getElementById('newDesc').value.trim();
+  const url=document.getElementById('newUrl').value.trim();
+  const tag=document.getElementById('newTag').value.trim();
+  if(!name||!url){ toolsMsg.textContent='Name and URL are required to add a tool.'; toolsMsg.className='status-msg err'; return; }
+  tools.push({id:Date.now()+'-'+Math.random().toString(16).slice(2),name,description:desc,url,tag});
+  document.getElementById('newName').value='';
+  document.getElementById('newDesc').value='';
+  document.getElementById('newUrl').value='';
+  document.getElementById('newTag').value='';
+  toolsMsg.textContent='';
+  renderTools();
+});
+
+document.getElementById('saveTools').addEventListener('click',async()=>{
+  toolsMsg.textContent='';
+  const invalid=tools.find(t=>!t.name.trim()||!t.url.trim());
+  if(invalid){ toolsMsg.textContent='Every tool needs a name and a URL.'; toolsMsg.className='status-msg err'; return; }
+  try{
+    tools=await apiPost('/api/tools',tools);
+    renderTools();
+    toolsMsg.textContent='Saved — live on your homepage now.';
+    toolsMsg.className='status-msg ok';
+  }catch(e){
+    toolsMsg.textContent=e.message;
+    toolsMsg.className='status-msg err';
+  }
+});
+
+// restore session if key already present
+if(adminKey()){
+  fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:adminKey()})})
+    .then(r=>r.json())
+    .then(d=>{ if(d.ok) enterPanel(); else signOut(); })
+    .catch(()=>{});
+}
+</script>
+</body>
+</html>
