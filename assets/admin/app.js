@@ -10,6 +10,7 @@ import { SCHEMA, GROUPS, SECTION_ORDER, ITEM_PATH, PANEL_BY_ID } from './schema.
 import { $, el, icon, toast, confirmDialog } from './ui.js';
 import { field } from './fields.js';
 import { validateAll } from './validate.js';
+import { exportPanel } from './export.js';
 
 const DRAFT_KEY = 'st-admin-draft';
 const KEY_KEY = 'st-admin-key';
@@ -225,6 +226,7 @@ function sectionToggleCard(p) {
 function buildPanel(p) {
   if (p.custom === 'overview') return overviewPanel();
   if (p.custom === 'availability') return availabilityPanel(p);
+  if (p.custom === 'export') return exportPanel({ hasUnsaved: () => dirtyStores().length > 0 });
 
   const wrap = el('div.panel');
   wrap.append(el('div.panel-head', {},

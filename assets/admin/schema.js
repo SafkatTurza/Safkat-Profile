@@ -286,6 +286,12 @@ export const SCHEMA = [
       { p: 'meta.ctaLabel', l: 'Header button label', t: 'text', max: 30 },
     ],
   },
+
+  /* ------------------------------------------------------- standalone copy */
+  {
+    id: 'share', title: 'Share a copy', group: 'Settings', icon: 'doc',
+    custom: 'export',
+  },
 ];
 
 /* Which sections can be switched on and off, in the order they appear on the

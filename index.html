@@ -686,7 +686,7 @@ coordinating</span></div>
         <p data-c="certifications.subtitle">Professional courses completed through LinkedIn Learning.</p>
       </div>
       <div class="cert-grid" id="certGrid">
-        <button class="cert reveal" type="button" data-images="assets/certs/managing-stakeholders.webp" data-title="Managing Project Stakeholders">
+        <button class="cert reveal" type="button" data-images='["assets/certs/managing-stakeholders.webp"]' data-title="Managing Project Stakeholders">
           <div class="thumb"><img src="assets/certs/managing-stakeholders.webp" alt="Managing Project Stakeholders certificate" loading="lazy" /><span class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span></div>
           <div class="body">
             <div class="top"><span class="plat"><span class="li">in</span>LinkedIn Learning</span><span class="date">Apr 2026</span></div>
@@ -694,7 +694,7 @@ coordinating</span></div>
             <span class="topic">Stakeholder Management</span>
           </div>
         </button>
-        <button class="cert reveal d1" type="button" data-images="assets/certs/scrum-basics.webp" data-title="Scrum: The Basics">
+        <button class="cert reveal d1" type="button" data-images='["assets/certs/scrum-basics.webp"]' data-title="Scrum: The Basics">
           <div class="thumb"><img src="assets/certs/scrum-basics.webp" alt="Scrum: The Basics certificate" loading="lazy" /><span class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span></div>
           <div class="body">
             <div class="top"><span class="plat"><span class="li">in</span>LinkedIn Learning</span><span class="date">Mar 2026</span></div>
@@ -702,7 +702,7 @@ coordinating</span></div>
             <span class="topic">Scrum</span>
           </div>
         </button>
-        <button class="cert reveal d2" type="button" data-images="assets/certs/hr-shrm.webp,assets/certs/hr-hrci.webp" data-title="Administrative Human Resources">
+        <button class="cert reveal d2" type="button" data-images='["assets/certs/hr-shrm.webp","assets/certs/hr-hrci.webp"]' data-title="Administrative Human Resources">
           <div class="thumb"><img src="assets/certs/hr-shrm.webp" alt="Administrative Human Resources certificate" loading="lazy" /><span class="count" aria-hidden="true">2</span><span class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span></div>
           <div class="body">
             <div class="top"><span class="plat"><span class="li">in</span>LinkedIn Learning</span><span class="date">Nov 2023</span></div>
@@ -857,7 +857,12 @@ function lbStep(d){lbIdx=(lbIdx+d+lbList.length)%lbList.length;lbRender();}
 document.getElementById('certGrid').addEventListener('click',ev=>{
   const c=ev.target.closest('.cert');
   if(!c||!c.dataset.images)return;
-  lbOpen(c.dataset.images.split(','),c.dataset.title,c);
+  /* A JSON list, not a comma-joined string: an image can be a data: URI, and
+     those contain commas. */
+  let imgs=[];
+  try{imgs=JSON.parse(c.dataset.images);}catch(err){imgs=c.dataset.images.split(',');}
+  if(!Array.isArray(imgs)||!imgs.length)return;
+  lbOpen(imgs,c.dataset.title,c);
 });
 document.getElementById('lbClose').addEventListener('click',lbClose);
 document.getElementById('lbPrev').addEventListener('click',()=>lbStep(-1));
@@ -870,14 +875,27 @@ document.addEventListener('keydown',ev=>{
   else if(ev.key==='ArrowRight'&&lbList.length>1)lbStep(1);
 });
 
+/* A standalone copy (admin → Share a copy) inlines the published data in a
+   <script id="snapshot"> tag. When it is there the page reads from it and
+   never calls the API, so the exported file works from a double-click. */
+const SNAP=(function(){
+  const node=document.getElementById('snapshot');
+  if(!node)return null;
+  try{const d=JSON.parse(node.textContent);return d&&typeof d==='object'?d:null;}
+  catch(err){return null;}
+})();
+
 // availability status — reads from /api/status, keeps existing markup as fallback
 (async function(){
   const pill=document.getElementById('statusPill');
   const label=document.getElementById('statusLabel');
   try{
-    const res=await fetch('/api/status',{cache:'no-store'});
-    if(!res.ok)return;
-    const data=await res.json();
+    let data=SNAP?SNAP.status:null;
+    if(!data){
+      const res=await fetch('/api/status',{cache:'no-store'});
+      if(!res.ok)return;
+      data=await res.json();
+    }
     if(typeof data.text==='string'&&data.text.trim())label.textContent=data.text;
     pill.classList.toggle('is-closed',data.available===false);
   }catch(err){ /* fetch unavailable (local file preview, offline, KV not set up yet) — keep default markup */ }
@@ -969,7 +987,7 @@ function certsHtml(items){
     const badge=/linkedin/i.test(c.issuer||'')?'<span class="li">in</span>':'';
     const topics=list(c.topics).map((t,j)=>`<span class="topic${j?' muted':''}">${e(t)}</span>`).join('');
     // no image means nothing to zoom into — render it as a plain card
-    return `<button class="cert reveal${delay}" type="button" data-images="${e(imgs.join(','))}" data-title="${e(c.title)}"${imgs.length?'':' disabled'}>
+    return `<button class="cert reveal${delay}" type="button" data-images='${e(JSON.stringify(imgs))}' data-title="${e(c.title)}"${imgs.length?'':' disabled'}>
           ${imgs.length?`<div class="thumb"><img src="${e(imgs[0])}" alt="${e(c.title)} certificate" loading="lazy" />${imgs.length>1?`<span class="count" aria-hidden="true">${imgs.length}</span>`:''}<span class="zoom" aria-hidden="true">${ZOOM}</span></div>`:''}
           <div class="body">
             <div class="top"><span class="plat">${badge}${e(c.issuer)}</span><span class="date">${e(c.date)}</span></div>
@@ -1129,7 +1147,10 @@ function applyContent(c){
 (async function(){
   const grid=$('toolsGrid'),empty=$('toolsEmpty');
   let content=null,tools=null;
-  try{
+  if(SNAP){
+    content=SNAP.content||null;
+    tools=SNAP.tools||[];
+  }else try{
     const [cRes,tRes]=await Promise.all([
       fetch('/api/content',{cache:'no-store'}),
       fetch('/api/tools',{cache:'no-store'}),
