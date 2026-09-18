@@ -209,18 +209,5 @@ const DEFAULT_CONTENT = {
 
 // Order the sections appear in, which also drives the nav and the 01/02/03
 // numbering. Disabled sections are skipped in both.
-const SECTION_ORDER = [
-  'about',
-  'experience',
-  'education',
-  'skills',
-  'software',
-  'aitools',
-  'projects',
-  'certifications',
-  'testimonials',
-  'languages',
-  'contact',
-];
 
-module.exports = { DEFAULT_CONTENT, SECTION_ORDER };
+module.exports = { DEFAULT_CONTENT };

@@ -3,6 +3,7 @@
    have never opened is still caught before publishing.
    =========================================================================== */
 
+import { dig } from './ui.js';
 import { SCHEMA } from './schema.js';
 import { TOOL_FIELDS } from './fields.js';
 
@@ -10,7 +11,6 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 const HTTP = /^https?:\/\/[^\s.]+\.[^\s]{2,}$/i;
 const LINK = /^(https?:\/\/[^\s.]+\.[^\s]{2,}|mailto:[^\s@]+@[^\s@]+\.[a-z]{2,}|tel:\+?[\d\s().-]{5,}|\/[^\s]*)$/i;
 
-const dig = (o, p) => String(p).split('.').reduce((x, k) => (x == null ? x : x[k]), o);
 
 /** Problems for one scalar field. */
 function checkScalar(f, path, value) {
@@ -94,9 +94,4 @@ export function validateAll(root) {
     }
   }
   return problems;
-}
-
-/** Re-check a single path (and anything nested under it) after an edit. */
-export function validatePath(root, path) {
-  return validateAll(root).filter(p => p.path === path || p.path.startsWith(path + '.'));
 }

@@ -102,13 +102,10 @@ img{max-width:100%;display:block}
 .btn-primary:hover:not(:disabled){background:var(--accent-hover)}
 .btn-ghost{border-color:var(--line-2);background:var(--surface)}
 .btn-ghost:hover:not(:disabled){background:var(--surface-2);border-color:var(--text-3)}
-.btn-quiet{color:var(--text-2)}
-.btn-quiet:hover:not(:disabled){background:var(--surface-2);color:var(--text)}
 .btn-danger{color:var(--danger);border-color:transparent;background:var(--danger-soft)}
 .btn-danger:hover:not(:disabled){background:var(--danger);color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn-sm{min-height:40px;font-size:13px;padding:0 12px;border-radius:var(--radius-xs)}
-.btn-block{width:100%}
 
 /* Icon-only controls keep a 44px hit area without a 44px footprint, so dense
    toolbars stay compact while remaining thumb-friendly. */

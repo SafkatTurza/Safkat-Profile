@@ -7,7 +7,7 @@
    =========================================================================== */
 
 import { SCHEMA, GROUPS, SECTION_ORDER, ITEM_PATH, PANEL_BY_ID } from './schema.js';
-import { $, el, icon, toast, confirmDialog } from './ui.js';
+import { $, el, icon, toast, confirmDialog, dig } from './ui.js';
 import { field } from './fields.js';
 import { validateAll } from './validate.js';
 import { exportPanel } from './export.js';
@@ -16,7 +16,6 @@ const DRAFT_KEY = 'st-admin-draft';
 const KEY_KEY = 'st-admin-key';
 
 /* -------------------------------------------------------------- utilities */
-const dig = (o, p) => String(p).split('.').reduce((x, k) => (x == null ? x : x[k]), o);
 
 function setPath(root, path, value) {
   const keys = String(path).split('.');

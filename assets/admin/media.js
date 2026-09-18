@@ -3,6 +3,8 @@
    they always fit the store limit, then hands a data URL to /api/media.
    =========================================================================== */
 
+import { readDataUrl } from './ui.js';
+
 /** What a person may pick. */
 export const MAX_SOURCE = 2 * 1024 * 1024;           // 2 MB, per the brief
 export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -32,15 +34,6 @@ export function validateFile(file, kind) {
       ? 'Only PDF files can be uploaded here.'
       : 'Only JPG, PNG and WebP images can be uploaded.');
   }
-}
-
-function readDataUrl(file) {
-  return new Promise((res, rej) => {
-    const fr = new FileReader();
-    fr.onload = () => res(fr.result);
-    fr.onerror = () => rej(new Error('Could not read that file.'));
-    fr.readAsDataURL(file);
-  });
 }
 
 /** Re-encode to WebP, stepping quality then size down until it fits the store. */

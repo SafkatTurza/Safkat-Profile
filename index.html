@@ -407,6 +407,9 @@ footer{border-top:1px solid var(--line);padding:40px 0}
 .foot-links{display:flex;gap:20px;flex-wrap:wrap}
 .foot-links a{color:var(--text-2);font-size:14px;font-weight:500;transition:color .2s;display:inline-flex;align-items:center;min-height:44px}
 .foot-links a:hover{color:var(--accent)}
+.foot-admin{color:var(--text-3);font-size:14px;font-weight:500;transition:color .2s;display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.foot-admin:hover{color:var(--accent)}
+.foot-admin svg{width:15px;height:15px}
 
 /* reveal */
 .reveal{transition:opacity .8s var(--ease),transform .8s var(--ease)}
@@ -788,6 +791,10 @@ coordinating</span></div>
       <a href="https://www.linkedin.com/in/safkat-turza/" target="_blank" rel="noopener">LinkedIn</a>
     </div>
     <span class="r" id="footRight">© 2026 · Project Co-Ordinator</span>
+    <a href="/admin" class="foot-admin" id="adminLink" rel="nofollow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      Admin
+    </a>
   </div>
 </footer>
 
@@ -1149,6 +1156,8 @@ function applyContent(c){
   if(SNAP){
     content=SNAP.content||null;
     tools=SNAP.tools||[];
+    /* no server behind a double-clicked copy, so the admin link goes with it */
+    const al=document.getElementById('adminLink');if(al)al.remove();
   }else try{
     const [cRes,tRes]=await Promise.all([
       fetch('/api/content',{cache:'no-store'}),

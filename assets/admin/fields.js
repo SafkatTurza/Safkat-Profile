@@ -6,7 +6,7 @@
    ctx = { get, set, dirty, post, register, openLists }
    =========================================================================== */
 
-import { el, icon, iconBtn, toast, confirmDialog, lightbox, draggable, $$ } from './ui.js';
+import { el, icon, iconBtn, toast, confirmDialog, lightbox, draggable, $$, dig } from './ui.js';
 import { uploadFile, IMAGE_ACCEPT, FILE_ACCEPT, kb } from './media.js';
 
 /* Stable per-object ids so a collapsed/expanded row survives reordering.
@@ -17,7 +17,6 @@ export function uid(obj) {
   return obj.__uid;
 }
 
-const dig = (o, p) => String(p).split('.').reduce((x, k) => (x == null ? x : x[k]), o);
 
 /* The AI tool cards reuse the generic list machinery. */
 export const TOOL_FIELDS = [

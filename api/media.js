@@ -1,17 +1,12 @@
+const { randomUUID } = require('crypto');
 const { kv } = require('./_kv');
 const { isAuthorized } = require('./_auth');
 
 const PREFIX = 'site:media:';
-const ALLOWED = ['image/webp', 'image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+const ALLOWED = ['image/webp', 'image/jpeg', 'image/png', 'application/pdf'];
 // Upstash's free plan caps a single command at 1 MB. Base64 inflates by ~33%,
 // so keep the decoded payload comfortably under that.
 const MAX_BYTES = 700 * 1024;
-
-function newId() {
-  let s = '';
-  for (let i = 0; i < 20; i++) s += Math.floor(Math.random() * 36).toString(36);
-  return s;
-}
 
 module.exports = async function handler(req, res) {
   if (req.method === 'GET') {
@@ -62,7 +57,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const id = newId();
+    const id = randomUUID().replace(/-/g, '');
     try {
       await kv().set(PREFIX + id, { mime, b64: buf.toString('base64') });
     } catch (e) {

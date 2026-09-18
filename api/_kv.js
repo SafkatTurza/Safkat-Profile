@@ -1,7 +1,3 @@
-const { Redis } = require('@upstash/redis');
-
-let client = null;
-
 // Vercel's Upstash integration names its env vars differently depending on the
 // prefix chosen at install time (KV_REST_API_URL, UPSTASH_REDIS_REST_URL,
 // STORAGE_REST_API_URL, ...). Rather than hardcode one, find whichever pair is
@@ -22,16 +18,34 @@ function findCredentials() {
   return null;
 }
 
-function kv() {
-  if (client) return client;
+/**
+ * One Upstash REST command. Values are stored as JSON, which is what the
+ * @upstash/redis client this replaced wrote, so existing documents read back
+ * unchanged.
+ */
+async function cmd(args) {
   const creds = findCredentials();
   if (!creds) {
     throw new Error(
       'No Redis connection found. Add the Upstash for Redis integration in your Vercel project (Storage tab), then redeploy.'
     );
   }
-  client = new Redis(creds);
-  return client;
+  const res = await fetch(creds.url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${creds.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.result;
 }
 
-module.exports = { kv, findCredentials };
+const kv = () => ({
+  async get(key) {
+    const raw = await cmd(['GET', key]);
+    return raw == null ? null : JSON.parse(raw);
+  },
+  set: (key, value) => cmd(['SET', key, JSON.stringify(value)]),
+});
+
+module.exports = { kv };

@@ -1,3 +1,4 @@
+const { randomUUID } = require('crypto');
 const { kv } = require('./_kv');
 const { isAuthorized } = require('./_auth');
 
@@ -6,7 +7,7 @@ const MAX_TOOLS = 50;
 
 function sanitizeTool(t) {
   return {
-    id: String(t.id || `${Date.now()}-${Math.random().toString(16).slice(2)}`),
+    id: String(t.id || randomUUID()),
     name: String(t.name || '').trim().slice(0, 80),
     description: String(t.description || '').trim().slice(0, 220),
     url: String(t.url || '').trim().slice(0, 300),

@@ -11,7 +11,7 @@
    API when one is present.
    =========================================================================== */
 
-import { el, icon, toast } from './ui.js';
+import { el, icon, toast, readDataUrl } from './ui.js';
 
 const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap';
 
@@ -44,15 +44,7 @@ async function getJson(url) {
 async function toDataUri(url) {
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`${url} responded ${res.status}`);
-  const blob = await res.blob();
-  // A read that neither resolves nor rejects would hang the whole export,
-  // so the failure path stays even though blobs rarely take it.
-  return new Promise((ok, fail) => {
-    const reader = new FileReader();
-    reader.onload = () => ok(reader.result);
-    reader.onerror = () => fail(new Error(`Could not read ${url}`));
-    reader.readAsDataURL(blob);
-  });
+  return readDataUrl(await res.blob());
 }
 
 /** One pass over the text, so a freshly inserted data URI is never rescanned

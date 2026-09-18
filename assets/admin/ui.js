@@ -7,10 +7,16 @@
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
-export function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
+/** Read a dotted path out of a nested object. */
+export const dig = (o, p) => String(p).split('.').reduce((x, k) => (x == null ? x : x[k]), o);
+
+/** Blob or File to a data: URL. */
+export const readDataUrl = blob => new Promise((ok, fail) => {
+  const fr = new FileReader();
+  fr.onload = () => ok(fr.result);
+  fr.onerror = () => fail(new Error('Could not read that file.'));
+  fr.readAsDataURL(blob);
+});
 
 /** el('div.card', {id:'x'}, child, 'text') — a tiny hyperscript. */
 export function el(spec, props, ...kids) {
@@ -62,10 +68,7 @@ export const ICONS = {
   plus: P('<path d="M12 5v14M5 12h14"/>'),
   trash: P('<path d="M4 7h16M10 4h4M6 7l1 13h10l1-13"/>'),
   copy: P('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5A1.5 1.5 0 0 0 13.5 4h-8A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15"/>'),
-  menu: P('<path d="M4 7h16M4 12h16M4 17h16"/>'),
   eye: P('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>'),
-  save: P('<path d="M5 4h11l3 3v13H5z"/><path d="M9 4v5h6V4M8 20v-6h8v6"/>'),
-  out: P('<path d="M14 3h5v18h-5"/><path d="M10 8 6 12l4 4M6 12h9"/>'),
   ok: P('<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.5"/>'),
   warn: P('<path d="M12 4 2.8 20h18.4z"/><path d="M12 10v4.5M12 17.4v.1"/>'),
   info: P('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.1"/>'),
@@ -73,7 +76,6 @@ export const ICONS = {
   doc: P('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>'),
   moon: P('<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>'),
   sun: P('<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/>'),
-  drag: P('<circle cx="9" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="15" cy="18" r="1.3"/>'),
   inbox: P('<path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M4.5 5h15l1.5 8v6H3v-6z"/>'),
 };
 

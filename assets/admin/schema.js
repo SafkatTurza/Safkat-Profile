@@ -14,8 +14,6 @@
              sum   how a list item summarises itself when collapsed
    =========================================================================== */
 
-export const GROUPS = ['General', 'Homepage', 'Contact & footer', 'Settings'];
-
 export const SCHEMA = [
   {
     id: 'overview', title: 'Overview', group: 'General', icon: 'home',
@@ -294,8 +292,11 @@ export const SCHEMA = [
   },
 ];
 
+/** Sidebar groups, in the order the panels above are written. */
+export const GROUPS = [...new Set(SCHEMA.map(p => p.group))];
+
 /* Which sections can be switched on and off, in the order they appear on the
-   page. Mirrors SECTION_ORDER in api/_defaults.js. */
+   page. */
 export const SECTION_ORDER = [
   'about', 'experience', 'education', 'skills', 'software',
   'aitools', 'projects', 'certifications', 'testimonials', 'languages', 'contact',
