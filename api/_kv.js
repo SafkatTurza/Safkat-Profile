@@ -9,14 +9,15 @@ let client = null;
 function findCredentials() {
   const env = process.env;
 
-  const urlKey = Object.keys(env).find(
-    (k) => /REST_API_URL$|REDIS_REST_URL$/.test(k) && env[k]
-  );
-  if (urlKey) {
-    const tokenKey = Object.keys(env).find(
-      (k) => /REST_API_TOKEN$|REDIS_REST_TOKEN$/.test(k) && env[k]
-    );
-    if (tokenKey) return { url: env[urlKey], token: env[tokenKey] };
+  // Take the token from the same prefix as the URL. Searching for the two
+  // independently can marry a new database's URL to a dead one's token when a
+  // replaced integration has left its variables behind, which fails as a
+  // password error and sends you looking in the wrong place entirely.
+  for (const key of Object.keys(env)) {
+    const m = /^(.*)(REST_API_URL|REDIS_REST_URL)$/.exec(key);
+    if (!m || !env[key]) continue;
+    const token = env[m[1] + m[2].replace('URL', 'TOKEN')];
+    if (token) return { url: env[key], token };
   }
 
   return null;
