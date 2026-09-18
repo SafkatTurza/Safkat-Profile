@@ -6,14 +6,16 @@
 import { readDataUrl } from './ui.js';
 
 /** What a person may pick. */
-export const MAX_SOURCE = 2 * 1024 * 1024;           // 2 MB, per the brief
+export const MAX_SOURCE = 20 * 1024 * 1024;          // images are re-encoded below, so this is only a sanity bound
 export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const IMAGE_ACCEPT = IMAGE_TYPES.join(',');
 export const FILE_TYPES = ['application/pdf'];
 export const FILE_ACCEPT = 'application/pdf,.pdf';
 
-/** What the store accepts — must match MAX_BYTES in api/media.js. */
-const MAX_STORED = 700 * 1024;
+/** What the store accepts — must match MAX_BYTES in api/media.js.
+    Upstash's free plan caps one command at 1 MB and base64 inflates by ~33%,
+    so this cannot go up without a paid plan. */
+export const MAX_STORED = 700 * 1024;
 
 export const kb = n => (n < 1024 * 1024
   ? Math.round(n / 1024) + ' KB'
@@ -22,8 +24,12 @@ export const kb = n => (n < 1024 * 1024
 /** Throws a message meant to be shown verbatim to the user. */
 export function validateFile(file, kind) {
   const types = kind === 'file' ? FILE_TYPES : IMAGE_TYPES;
-  if (file.size > MAX_SOURCE) {
-    throw new Error(`"${file.name}" is ${kb(file.size)} — the limit is ${kb(MAX_SOURCE)}.`);
+  // An image is re-encoded to fit the store however big it starts, so the file
+  // you pick can be far larger than what is saved. A PDF is stored as it is,
+  // so for those the store limit is the only limit there is.
+  const cap = kind === 'file' ? MAX_STORED : MAX_SOURCE;
+  if (file.size > cap) {
+    throw new Error(`"${file.name}" is ${kb(file.size)} — the limit is ${kb(cap)}.`);
   }
   // Some browsers report an empty type for files dragged from odd sources, so
   // fall back to the extension rather than rejecting a valid file outright.

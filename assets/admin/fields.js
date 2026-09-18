@@ -7,7 +7,7 @@
    =========================================================================== */
 
 import { el, icon, iconBtn, toast, confirmDialog, lightbox, draggable, $$, dig } from './ui.js';
-import { uploadFile, IMAGE_ACCEPT, FILE_ACCEPT, kb } from './media.js';
+import { uploadFile, IMAGE_ACCEPT, FILE_ACCEPT, kb, MAX_SOURCE, MAX_STORED } from './media.js';
 
 /* Stable per-object ids so a collapsed/expanded row survives reordering.
    Non-enumerable, so they never reach JSON.stringify or the API. */
@@ -111,7 +111,9 @@ function mediaField(f, path, ctx) {
       if (isImg) prev.removeAttribute('src');
       info.append(
         el('b', { text: isImg ? 'Drop an image here' : 'Drop a PDF here' }),
-        el('span', { text: isImg ? 'or click to browse — JPG, PNG or WebP, up to 2 MB' : 'or click to browse — PDF up to 2 MB' }));
+        el('span', { text: isImg
+          ? `or click to browse — JPG, PNG or WebP, up to ${kb(MAX_SOURCE)}`
+          : `or click to browse — PDF up to ${kb(MAX_STORED)}` }));
     }
   };
 
@@ -185,7 +187,7 @@ function galleryField(f, path, ctx) {
     const input = el('input', { type: 'file', accept: IMAGE_ACCEPT, multiple: true, 'aria-label': 'Add images' });
     const info = el('div.info', {},
       el('b', { text: items.length ? 'Add another image' : 'Drop images here' }),
-      el('span', { text: 'JPG, PNG or WebP, up to 2 MB each' }));
+      el('span', { text: `JPG, PNG or WebP, up to ${kb(MAX_SOURCE)} each` }));
     const take = async files => {
       const list = [...(files || [])];
       if (!list.length) return;
