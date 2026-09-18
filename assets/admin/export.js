@@ -22,8 +22,9 @@ const KEEP_SUBSET = /^latin(-ext)?$/;
 /* Local files the page can reference. Matched in both the markup and the
    content JSON, so images set in the admin are embedded too. */
 const ASSET_RE = /(?:\.?\/)?assets\/[A-Za-z0-9._\-/]+\.(?:png|jpe?g|webp|gif|svg|avif|ico|pdf)/gi;
+const GSTATIC_RE = /url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/g;
 
-export const fmtBytes = n =>
+const fmtBytes = n =>
   n < 1024 * 1024 ? Math.round(n / 1024) + ' KB' : (n / 1048576).toFixed(2) + ' MB';
 
 /* ------------------------------------------------------------------ fetch */
@@ -44,21 +45,14 @@ async function toDataUri(url) {
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`${url} responded ${res.status}`);
   const blob = await res.blob();
-  return new Promise((resolve, reject) => {
+  // A read that neither resolves nor rejects would hang the whole export,
+  // so the failure path stays even though blobs rarely take it.
+  return new Promise((ok, fail) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error(`Could not read ${url}`));
+    reader.onload = () => ok(reader.result);
+    reader.onerror = () => fail(new Error(`Could not read ${url}`));
     reader.readAsDataURL(blob);
   });
-}
-
-/* ----------------------------------------------------------------- assets */
-function findAssets(...texts) {
-  const found = new Set();
-  for (const text of texts) {
-    for (const m of String(text).matchAll(ASSET_RE)) found.add(m[0]);
-  }
-  return [...found];
 }
 
 /** One pass over the text, so a freshly inserted data URI is never rescanned
@@ -66,50 +60,26 @@ function findAssets(...texts) {
 const swapAssets = (text, map) => text.replace(ASSET_RE, m => map.get(m) || m);
 
 /* ------------------------------------------------------------------ fonts */
-/** Returns a <style> body with the web fonts embedded, or null if Google
-    cannot be reached — in which case the original <link> is left in place
-    and the file simply loads its fonts online like the site does. */
+/** A <style> body with the web fonts embedded. Throws when Google cannot be
+    reached, and the caller then leaves the original <link> in place so the
+    file loads its fonts online exactly like the site does. */
 async function inlineFonts() {
-  const css = await getText(FONT_CSS);
-
   // css2 emits one @font-face per weight per subset, each preceded by a
   // /* subset */ comment naming it.
-  const kept = [];
-  const re = /\/\*\s*([\w-]+)\s*\*\/\s*(@font-face\s*\{[^}]*\})/g;
-  let m;
-  while ((m = re.exec(css))) if (KEEP_SUBSET.test(m[1])) kept.push(m[2]);
-  const faces = kept.length ? kept : (css.match(/@font-face\s*\{[^}]*\}/g) || []);
+  const css = await getText(FONT_CSS);
+  const faces = [...css.matchAll(/\/\*\s*([\w-]+)\s*\*\/\s*(@font-face\s*\{[^}]*\})/g)]
+    .filter(m => KEEP_SUBSET.test(m[1])).map(m => m[2]);
   if (!faces.length) throw new Error('No @font-face rules found');
 
-  const files = new Map();
-  for (const face of faces) {
-    for (const um of face.matchAll(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/g)) {
-      if (!files.has(um[1])) files.set(um[1], null);
-    }
-  }
-  for (const url of [...files.keys()]) files.set(url, await toDataUri(url));
+  const urls = [...new Set([...faces.join('\n').matchAll(GSTATIC_RE)].map(m => m[1]))];
+  const files = new Map(await Promise.all(urls.map(async u => [u, await toDataUri(u)])));
 
-  return faces
-    .map(face => face.replace(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/g,
-      (whole, url) => files.get(url) ? `url(${files.get(url)})` : whole))
-    .join('\n');
-}
-
-/* ---------------------------------------------------------------- filename */
-function fileNameFor(content) {
-  const name = String((content && content.hero && content.hero.name) || 'profile').trim();
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return `${slug || 'profile'}-profile.html`;
+  return faces.map(face =>
+    face.replace(GSTATIC_RE, (whole, url) => `url(${files.get(url) || url})`)).join('\n');
 }
 
 /* ------------------------------------------------------------------- build */
-/**
- * @param {object}   opts
- * @param {boolean}  opts.embedFonts  embed the web fonts for true offline use
- * @param {Function} opts.onStep      progress reporter
- * @returns {Promise<{blob:Blob, name:string, size:number, notes:string[]}>}
- */
-export async function buildStandalone({ embedFonts = true, onStep = () => {} } = {}) {
+async function buildStandalone({ embedFonts = true, onStep = () => {} } = {}) {
   const notes = [];
 
   onStep('Reading the published page…');
@@ -121,13 +91,10 @@ export async function buildStandalone({ embedFonts = true, onStep = () => {} } =
   ]);
   if (!content) notes.push('Content could not be read, so the file falls back to the built-in text.');
 
-  let snapshot = JSON.stringify({
-    content, tools: Array.isArray(tools) ? tools : [], status,
-    exportedAt: new Date().toISOString(),
-  });
+  let snapshot = JSON.stringify({ content, tools: Array.isArray(tools) ? tools : [], status });
 
   onStep('Embedding images…');
-  const wanted = findAssets(html, snapshot);
+  const wanted = new Set((html.match(ASSET_RE) || []).concat(snapshot.match(ASSET_RE) || []));
   const map = new Map();
   let missing = 0;
   for (const ref of wanted) {
@@ -156,29 +123,29 @@ export async function buildStandalone({ embedFonts = true, onStep = () => {} } =
   onStep('Assembling the file…');
   // Inert JSON, but it still lives inside a script element: anything that could
   // close the tag early has to be escaped.
-  const payload = snapshot
-    .replace(/</g, '\\u003c')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
+  html = html.replace('<script>', () =>
+    `<script type="application/json" id="snapshot">${snapshot.replace(/</g, '\\u003c')}</script>\n<script>`);
 
-  html = html.replace('<script>',
-    () => `<script type="application/json" id="snapshot">${payload}</${'script'}>\n<script>`);
-
+  const slug = String((content && content.hero && content.hero.name) || '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'profile';
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  return { blob, name: fileNameFor(content), size: blob.size, notes };
+  return { blob, name: `${slug}-profile.html`, size: blob.size, notes };
 }
 
-export function download(blob, name) {
+function download(blob, name) {
   const url = URL.createObjectURL(blob);
-  const a = el('a', { href: url, download: name });
-  document.body.append(a);
-  a.click();
-  a.remove();
+  el('a', { href: url, download: name }).click();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 /* ------------------------------------------------------------------- panel */
-export function exportPanel({ hasUnsaved }) {
+const POINTS = [
+  'The page exactly as it is published, including your photo and certificates.',
+  'Works offline — no server, no login, nothing to install.',
+  'A fixed snapshot: later edits in this panel will not change a copy already sent.',
+];
+
+export function exportPanel({ unsaved }) {
   const wrap = el('div.panel');
   wrap.append(el('div.panel-head', {},
     el('h1', { text: 'Share a copy' }),
@@ -194,32 +161,26 @@ export function exportPanel({ hasUnsaved }) {
       el('b', { text: 'Include the fonts' }),
       el('span', { text: 'Keeps the typography identical offline. Turn it off for a much smaller file that looks right whenever there is internet.' }))));
 
-  const warn = el('div.f-hint', { hidden: !hasUnsaved(), style: { marginTop: '14px' } });
-  if (hasUnsaved()) {
-    warn.innerHTML = '';
-    warn.append(icon('warn'), el('span', { text: ' You have unsaved changes. The copy is taken from your published site, so save first if you want them included.' }));
-  }
-  card.append(warn);
+  if (unsaved) card.append(el('div.f-hint.share-gap', {}, icon('warn'),
+    el('span', { text: ' You have unsaved changes. The copy is taken from your published site, so save first if you want them included.' })));
 
-  const btn = el('button.btn.btn-primary', { type: 'button', style: { marginTop: '18px' } },
+  const btn = el('button.btn.btn-primary.share-gap', { type: 'button' },
     icon('down'), el('span', { text: 'Build the file' }));
-  const log = el('div.f-hint', { hidden: true, style: { marginTop: '12px' } });
+  const log = el('div.f-hint.share-gap', { hidden: true });
+  const say = (name, text) => { log.innerHTML = ''; log.append(icon(name), el('span', { text: ' ' + text })); };
 
   btn.addEventListener('click', async () => {
     btn.disabled = true;
     fontsCb.disabled = true;
     log.hidden = false;
-    const step = msg => { log.innerHTML = ''; log.append(icon('info'), el('span', { text: ' ' + msg })); };
     try {
-      const out = await buildStandalone({ embedFonts: fontsCb.checked, onStep: step });
+      const out = await buildStandalone({ embedFonts: fontsCb.checked, onStep: msg => say('info', msg) });
       download(out.blob, out.name);
-      log.innerHTML = '';
-      log.append(icon('ok'), el('span', { text: ` ${out.name} — ${fmtBytes(out.size)}. Check your downloads.` }));
-      out.notes.forEach(n => log.append(el('div', { text: n, style: { marginTop: '4px' } })));
+      say('ok', `${out.name} — ${fmtBytes(out.size)}. Check your downloads.`);
+      out.notes.forEach(n => log.append(el('div.share-note', { text: n })));
       toast('Your standalone file is ready.', 'ok');
     } catch (err) {
-      log.innerHTML = '';
-      log.append(icon('warn'), el('span', { text: ' ' + (err.message || 'The file could not be built.') }));
+      say('warn', err.message || 'The file could not be built.');
       toast('Could not build the file.', 'warn');
     } finally {
       btn.disabled = false;
@@ -228,18 +189,9 @@ export function exportPanel({ hasUnsaved }) {
   });
 
   card.append(btn, log);
-  wrap.append(card);
-
-  const help = el('div.card');
-  help.append(el('div.card-head', {}, el('h2', { text: 'What your team gets' })));
-  const ul = el('ul', { style: { margin: '0', paddingLeft: '18px', color: 'var(--text-2)', fontSize: '14px', lineHeight: '1.9' } });
-  [
-    'The page exactly as it is published, including your photo and certificates.',
-    'Works offline — no server, no login, nothing to install.',
-    'A fixed snapshot: later edits in this panel will not change a copy already sent.',
-  ].forEach(t => ul.append(el('li', { text: t })));
-  help.append(ul);
-  wrap.append(help);
+  wrap.append(card, el('div.card', {},
+    el('div.card-head', {}, el('h2', { text: 'What your team gets' })),
+    el('ul.share-points', {}, POINTS.map(t => el('li', { text: t })))));
 
   return wrap;
 }

@@ -859,9 +859,8 @@ document.getElementById('certGrid').addEventListener('click',ev=>{
   if(!c||!c.dataset.images)return;
   /* A JSON list, not a comma-joined string: an image can be a data: URI, and
      those contain commas. */
-  let imgs=[];
-  try{imgs=JSON.parse(c.dataset.images);}catch(err){imgs=c.dataset.images.split(',');}
-  if(!Array.isArray(imgs)||!imgs.length)return;
+  const imgs=JSON.parse(c.dataset.images);
+  if(!imgs.length)return;
   lbOpen(imgs,c.dataset.title,c);
 });
 document.getElementById('lbClose').addEventListener('click',lbClose);

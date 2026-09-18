@@ -226,7 +226,7 @@ function sectionToggleCard(p) {
 function buildPanel(p) {
   if (p.custom === 'overview') return overviewPanel();
   if (p.custom === 'availability') return availabilityPanel(p);
-  if (p.custom === 'export') return exportPanel({ hasUnsaved: () => dirtyStores().length > 0 });
+  if (p.custom === 'export') return exportPanel({ unsaved: dirtyStores().length > 0 });
 
   const wrap = el('div.panel');
   wrap.append(el('div.panel-head', {},
