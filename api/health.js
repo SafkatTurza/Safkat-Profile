@@ -1,4 +1,4 @@
-const { kv, findCredentials } = require('./_kv');
+const { kv, findCredentials, explain } = require('./_kv');
 
 // Setup diagnostic: reports whether the Redis integration and admin password
 // are wired up, and whether a write actually round-trips. Saving content and
@@ -24,7 +24,11 @@ module.exports = async function handler(req, res) {
       await kv().get('site:health');
       report.redisReachable = true;
     } catch (e) {
-      report.error = e.message;
+      report.error = explain(e);
+      // The plain message is almost always just "fetch failed"; the errno that
+      // says whether the host is missing or refusing sits in the cause chain.
+      report.cause = [];
+      for (let c = e; c; c = c.cause) report.cause.push(c.code || c.message);
     }
   }
 

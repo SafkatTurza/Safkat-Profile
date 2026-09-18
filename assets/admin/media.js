@@ -45,7 +45,10 @@ export function validateFile(file, kind) {
 /** Re-encode to WebP, stepping quality then size down until it fits the store. */
 async function shrinkImage(file) {
   let bmp;
-  try { bmp = await createImageBitmap(file); }
+  // Phone cameras write the photo sideways and record the rotation in EXIF.
+  // createImageBitmap ignores that by default, so a portrait shot would be
+  // stored on its side — now that a 20 MB file is allowed, most will be phone shots.
+  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
   catch (e) { throw new Error('That image could not be read — try re-saving it as JPG or PNG.'); }
 
   let maxEdge = 1600, quality = 0.84, out = '';

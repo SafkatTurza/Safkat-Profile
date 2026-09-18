@@ -34,4 +34,26 @@ function kv() {
   return client;
 }
 
-module.exports = { kv, findCredentials };
+// Node's fetch says only "fetch failed" when a host does not resolve or refuses
+// the connection — the error that actually matters is two levels down in .cause.
+// A deleted or paused Upstash database looks exactly like this, and wrong
+// credentials do not: those come back as WRONGPASS from a server that answered.
+// Every write path shows this text to the user, so it has to name the fix.
+function explain(err) {
+  const chain = [];
+  for (let e = err; e; e = e.cause) chain.push(e.code || '', e.message || '');
+  const text = chain.join(' ');
+
+  if (/ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ECONNRESET|fetch failed/i.test(text)) {
+    return 'Could not reach the database. Open your Vercel project, go to Storage, and check the Upstash for Redis database still exists — free databases are deleted after a long idle period. Reconnect it and redeploy.';
+  }
+  if (/WRONGPASS|NOPERM|unauthorized|401/i.test(text)) {
+    return 'The database rejected the password. Reconnect the Upstash integration in your Vercel project so the keys are written again, then redeploy.';
+  }
+  if (/max request size|1 ?MB|request too large|413/i.test(text)) {
+    return 'That was too large for the free database plan. Use a smaller image.';
+  }
+  return err.message || 'The database returned an error.';
+}
+
+module.exports = { kv, findCredentials, explain };

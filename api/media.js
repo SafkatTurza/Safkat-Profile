@@ -1,5 +1,5 @@
 const { randomUUID } = require('crypto');
-const { kv } = require('./_kv');
+const { kv, explain } = require('./_kv');
 const { isAuthorized } = require('./_auth');
 
 const PREFIX = 'site:media:';
@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
     try {
       rec = await kv().get(PREFIX + id);
     } catch (e) {
-      return res.status(503).json({ error: e.message });
+      return res.status(503).json({ error: explain(e) });
     }
     if (!rec || !rec.b64) return res.status(404).json({ error: 'Not found' });
 
@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
     try {
       await kv().set(PREFIX + id, { mime, b64: buf.toString('base64') });
     } catch (e) {
-      return res.status(503).json({ error: e.message });
+      return res.status(503).json({ error: explain(e) });
     }
     return res.status(200).json({ id, url: `/api/media?id=${id}`, bytes: buf.length });
   }

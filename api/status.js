@@ -1,4 +1,4 @@
-const { kv } = require('./_kv');
+const { kv, explain } = require('./_kv');
 const { isAuthorized } = require('./_auth');
 
 const KEY = 'site:status';
@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
     try {
       await kv().set(KEY, status);
     } catch (e) {
-      return res.status(503).json({ error: e.message });
+      return res.status(503).json({ error: explain(e) });
     }
     return res.status(200).json(status);
   }
