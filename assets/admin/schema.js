@@ -35,8 +35,8 @@ export const SCHEMA = [
       { p: 'hero.role', l: 'Job title', t: 'text', req: 1, max: 80, half: 1 },
       { p: 'hero.summary', l: 'Summary paragraph', t: 'area', req: 1, max: 400 },
       {
-        p: 'hero.portrait', l: 'Portrait photo', t: 'image',
-        h: 'Leave empty to keep the built-in photo. Large images are resized and converted to WebP automatically.',
+        p: 'hero.portraits', l: 'Portrait photos', t: 'images',
+        h: 'Leave empty to keep the built-in photo. Add more than one and the hero fades between them every few seconds, with dots showing how many there are. Drag to reorder. Large images are resized and converted to WebP automatically.',
       },
       { p: 'hero.badgeBig', l: 'Badge — big text', t: 'text', max: 8, half: 1, ph: '10+' },
       {

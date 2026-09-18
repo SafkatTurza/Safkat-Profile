@@ -21,7 +21,10 @@ const DEFAULT_CONTENT = {
     role: 'Project Co-Ordinator',
     summary:
       'Project coordinator with 10+ years of experience managing concurrent projects across coordination, administration, and compliance — keeping teams, clients, and timelines aligned.',
+    // portrait is no longer editable; kept so a single photo saved by an
+    // earlier version still shows until portraits replaces it.
     portrait: '',
+    portraits: [],
     badgeBig: '10+',
     badgeLabel: 'years\ncoordinating',
     primaryCta: 'Get in touch',

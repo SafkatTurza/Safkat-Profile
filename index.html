@@ -196,7 +196,18 @@ header.nav.scrolled{
   box-shadow:var(--shadow-lg);border:1px solid var(--line);
   aspect-ratio:4/5;background:var(--surface-2);
 }
-.portrait-frame img{width:100%;height:100%;object-fit:cover;object-position:50% 22%;filter:grayscale(1) contrast(1.02)}
+.portrait-frame img{width:100%;height:100%;object-fit:cover;object-position:50% 22%;filter:grayscale(1) contrast(1.02);transition:opacity .4s var(--ease)}
+.portrait-frame.fading img{opacity:0}
+/* one dot per photo, only drawn when there is more than one */
+.portrait-dots{display:flex;justify-content:center;gap:8px;margin-top:16px}
+.portrait-dots button{
+  width:8px;height:8px;padding:0;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:var(--text-3);opacity:.4;
+  transition:opacity .25s var(--ease),background .25s var(--ease);
+}
+.portrait-dots button:hover{opacity:.75}
+.portrait-dots button[aria-current="true"]{background:var(--accent);border-color:var(--accent);opacity:1}
+.portrait-dots button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .portrait-wrap::before{
   content:"";position:absolute;inset:22px -20px -22px 22px;border-radius:18px;
   background:linear-gradient(150deg,var(--accent),var(--teal));opacity:.85;z-index:-1;
@@ -419,6 +430,7 @@ footer{border-top:1px solid var(--line);padding:40px 0}
 .reveal.d2{transition-delay:.16s}
 .reveal.d3{transition-delay:.24s}
 @media(prefers-reduced-motion:reduce){
+  .portrait-frame img{transition:none}
   .anim .hero h1 .line span,.anim .hero .role,.anim .hero .summary,.anim .hero-actions,.anim .meta-row,.anim .portrait-wrap,.anim .reveal{opacity:1!important;transform:none!important;animation:none!important}
 }
 
@@ -523,10 +535,11 @@ footer{border-top:1px solid var(--line);padding:40px 0}
           </div>
         </div>
         <div class="portrait-wrap">
-          <div class="portrait-frame"><picture>
+          <div class="portrait-frame" id="portraitFrame"><picture>
             <source id="portraitSrc" srcset="assets/safkat-portrait.webp" type="image/webp" />
             <img id="portraitImg" src="assets/safkat-portrait.jpg" width="900" height="1350" alt="Safkat Turza" fetchpriority="high" />
           </picture></div>
+          <div class="portrait-dots" id="portraitDots" hidden></div>
           <div class="portrait-badge"><span class="big" data-c="hero.badgeBig">10+</span><span class="lbl" data-c="hero.badgeLabel">years
 coordinating</span></div>
         </div>
@@ -1061,6 +1074,52 @@ function applySections(c){
   }
 }
 
+/* Hero portraits. One photo behaves exactly as before; several fade between
+   themselves and get a dot each. applyContent runs on every content update, so
+   the previous timer has to go before a new one starts. */
+let portraitTimer=null;
+function showPortraits(shots){
+  const frame=$('portraitFrame'),src=$('portraitSrc'),img=$('portraitImg'),dots=$('portraitDots');
+  clearInterval(portraitTimer);
+  if(!img||!shots.length){ if(dots)dots.hidden=true; return; }
+
+  let at=0;
+  const paint=()=>{
+    if(src)src.srcset=shots[at];
+    img.src=shots[at];
+    if(dots)[...dots.children].forEach((d,k)=>d.setAttribute('aria-current',k===at?'true':'false'));
+  };
+  const go=n=>{
+    const next=(n+shots.length)%shots.length;
+    if(next===at)return;
+    // decode before it is shown, so the fade never lands on a blank frame
+    const pre=new Image();
+    pre.src=shots[next];
+    if(frame)frame.classList.add('fading');
+    setTimeout(()=>{ at=next; paint(); if(frame)frame.classList.remove('fading'); },400);
+  };
+
+  if(dots){
+    dots.innerHTML='';
+    shots.forEach((_,k)=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.setAttribute('aria-label',`Show photo ${k+1} of ${shots.length}`);
+      // picking a photo by hand stops the cycle: auto-moving content needs a
+      // way to stop it, and this is the control that is already on screen
+      b.addEventListener('click',()=>{ clearInterval(portraitTimer); go(k); });
+      dots.append(b);
+    });
+    dots.hidden=shots.length<2;
+  }
+  paint();
+
+  const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // ponytail: fixed 6s. A per-photo delay would need a field per photo in the
+  // admin; add one only if a fixed pace turns out to be wrong.
+  if(shots.length>1&&!still) portraitTimer=setInterval(()=>go(at+1),6000);
+}
+
 function applyContent(c){
   // plain-text and inline-html fields declared straight on the markup
   document.querySelectorAll('[data-c]').forEach(el=>setText(el,dig(c,el.dataset.c)));
@@ -1078,11 +1137,7 @@ function applyContent(c){
     const html=words.map(w=>`<span class="line"><span>${e(w)}</span></span>`).join('\n            ');
     if(h1.textContent.trim().split(/\s+/).join(' ')!==words.join(' ')) h1.innerHTML=html;
   }
-  if(hero.portrait){
-    const src=$('portraitSrc'),img=$('portraitImg');
-    if(src)src.srcset=hero.portrait;
-    if(img)img.src=hero.portrait;
-  }
+  showPortraits(list(hero.portraits).length?list(hero.portraits):[hero.portrait].filter(Boolean));
   const cv=$('cvBtn');
   if(cv){
     if(hero.cvUrl){cv.href=hero.cvUrl;cv.textContent=hero.cvLabel||'Download CV';cv.hidden=false;}
